@@ -1,0 +1,1 @@
+export default function Properties(){return <main style={{fontFamily:'Arial,sans-serif',padding:'60px 24px',maxWidth:1100,margin:'auto'}}><a href="/laksarpropertyes/">← Home</a><h1>Properties</h1><p>Current sample inventory is being prepared. Contact us with your requirement for the latest local options.</p></main>}
