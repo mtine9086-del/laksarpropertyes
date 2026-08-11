@@ -1,5 +1,6 @@
 import './globals.css';
 import './inspira.css';
+import './property-modal.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
