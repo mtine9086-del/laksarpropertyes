@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import RevealCard from '@/components/animate-ui/RevealCard';
 
 type Category = 'All' | 'Plots' | 'Land' | 'Homes' | 'Commercial';
 
@@ -130,10 +131,7 @@ export default function Home() {
           <div className="tab-indicator" aria-hidden="true" />
           {tabs.map((tab) => <button key={tab} className={active === tab ? 'active' : ''} onClick={(e) => { setActive(tab); moveTabIndicator(e.currentTarget); }} role="tab" aria-selected={active === tab}>{tab}</button>)}
         </div>
-        <div className="cards">{visibleProperties.map((item, i) => <a className="property-card reveal tilt-card" style={{ '--delay': `${i * 80}ms` } as React.CSSProperties} href="#contact" key={item.title}>
-          <div className="card-image"><img src={`./${item.image}`} alt={item.title} /><span>0{i + 1}</span><div className="card-overlay"><b>View category</b><strong>↗</strong></div></div>
-          <div className="card-body"><h3>{item.title}</h3><p>{item.text}</p><b className="card-link">Explore <span>↗</span></b></div>
-        </a>)}</div>
+        <div className="cards">{visibleProperties.map((item, i) => <RevealCard key={item.title} href="#contact" image={item.image} alt={item.title} number={`0${i + 1}`} title={item.title} text={item.text} />)}</div>
       </section>
 
       <section id="local" className="local-section">
