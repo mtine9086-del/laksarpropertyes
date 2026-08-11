@@ -38,6 +38,17 @@ jobs:
           BASE_PATH: ${{ steps.vars.outputs.base_path }}
           NEXT_PUBLIC_SITE_URL: https://${{ github.repository_owner }}.github.io${{ steps.vars.outputs.base_path }}
         run: npm run build
+      - name: Copy supplied property visuals
+        run: |
+          cp hero-poster.jpg out/hero-poster.jpg
+          cp cat-plots.jpg out/cat-plots.jpg
+          cp cat-land.jpg out/cat-land.jpg
+          cp cat-houses.jpg out/cat-houses.jpg
+          cp cat-commercial.jpg out/cat-commercial.jpg
+          cp prop-land-khanpur.jpg out/prop-land-khanpur.jpg
+          cp prop-plot-nh334.jpg out/prop-plot-nh334.jpg
+          cp prop-house-3bhk.jpg out/prop-house-3bhk.jpg
+          cp prop-plot-colony.jpg out/prop-plot-colony.jpg
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
