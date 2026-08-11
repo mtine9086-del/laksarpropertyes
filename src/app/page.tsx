@@ -1,10 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type Category = 'All' | 'Plots' | 'Land' | 'Homes' | 'Commercial';
 
-const properties = [
+type Property = {
+  category: Exclude<Category, 'All'>;
+  title: string;
+  text: string;
+  image: string;
+};
+
+const properties: Property[] = [
   { category: 'Plots', title: 'Residential Plots', text: 'Practical plots in connected localities around Laksar.', image: 'cat-plots.jpg' },
   { category: 'Land', title: 'Agricultural Land', text: 'Open land and farmland opportunities with local context.', image: 'cat-land.jpg' },
   { category: 'Homes', title: 'Homes', text: 'Comfortable houses for everyday family living.', image: 'cat-houses.jpg' },
@@ -12,45 +19,118 @@ const properties = [
 ];
 
 const tabs: Category[] = ['All', 'Plots', 'Land', 'Homes', 'Commercial'];
+const gallery = [
+  { src: './prop-plot-nh334.jpg', label: '01 / PLOTS', alt: 'Plot near NH 334' },
+  { src: './prop-house-3bhk.jpg', label: '02 / HOMES', alt: 'Residential house' },
+  { src: './prop-plot-colony.jpg', label: '03 / LOCALITY', alt: 'Residential plot colony' },
+];
 
 export default function Home() {
   const [ready, setReady] = useState(false);
   const [active, setActive] = useState<Category>('All');
+  const [navScrolled, setNavScrolled] = useState(false);
+  const [lightbox, setLightbox] = useState<number | null>(null);
+  const tabRef = useRef<HTMLDivElement>(null);
+  const heroMediaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setReady(true), 120);
-    const observer = new IntersectionObserver((entries) => entries.forEach((entry) => {
+    const timer = window.setTimeout(() => setReady(true), 80);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const revealObserver = new IntersectionObserver((entries) => entries.forEach((entry) => {
       if (entry.isIntersecting) entry.target.classList.add('in-view');
-    }), { threshold: 0.14, rootMargin: '0px 0px -8% 0px' });
-    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
-    return () => { window.clearTimeout(timer); observer.disconnect(); };
+    }), { threshold: 0.12, rootMargin: '0px 0px -7% 0px' });
+    document.querySelectorAll('.reveal').forEach((el) => revealObserver.observe(el));
+
+    const onScroll = () => {
+      const y = window.scrollY;
+      setNavScrolled(y > 35);
+      if (!reduced && heroMediaRef.current) {
+        heroMediaRef.current.style.transform = `translate3d(0, ${Math.min(y * 0.12, 90)}px, 0)`;
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    return () => {
+      window.clearTimeout(timer);
+      revealObserver.disconnect();
+      window.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
-  const visibleProperties = useMemo(() => active === 'All' ? properties : properties.filter((item) => item.category === active), [active]);
+  useEffect(() => {
+    if (lightbox === null) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setLightbox(null);
+      if (event.key === 'ArrowRight') setLightbox((i) => i === null ? 0 : (i + 1) % gallery.length);
+      if (event.key === 'ArrowLeft') setLightbox((i) => i === null ? 0 : (i - 1 + gallery.length) % gallery.length);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [lightbox]);
+
+  const visibleProperties = useMemo(
+    () => active === 'All' ? properties : properties.filter((item) => item.category === active),
+    [active]
+  );
+
+  const moveTabIndicator = (element: HTMLButtonElement) => {
+    const wrapper = tabRef.current;
+    if (!wrapper) return;
+    const indicator = wrapper.querySelector<HTMLElement>('.tab-indicator');
+    if (!indicator) return;
+    indicator.style.width = `${element.offsetWidth}px`;
+    indicator.style.transform = `translateX(${element.offsetLeft}px)`;
+  };
+
+  useEffect(() => {
+    const activeButton = tabRef.current?.querySelector<HTMLButtonElement>('[aria-selected="true"]');
+    if (activeButton) moveTabIndicator(activeButton);
+    const onResize = () => {
+      const button = tabRef.current?.querySelector<HTMLButtonElement>('[aria-selected="true"]');
+      if (button) moveTabIndicator(button);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [active]);
 
   return (
     <main className="site-shell">
-      <nav className="nav">
-        <a className="brand" href="#top"><span>LAKSAR</span> PROPERTIES</a>
-        <div className="nav-links"><a href="#properties">Properties</a><a href="#local">Our approach</a><a className="nav-cta" href="#contact">Enquire <b>↗</b></a></div>
+      <nav className={`nav ${navScrolled ? 'nav-scrolled' : ''}`}>
+        <a className="brand magnetic" href="#top" aria-label="Laksar Properties home"><span>LAKSAR</span> PROPERTIES</a>
+        <div className="nav-links">
+          <a href="#properties">Properties</a>
+          <a href="#local">Our approach</a>
+          <a className="nav-cta" href="#contact">Enquire <b>↗</b></a>
+        </div>
       </nav>
 
       <section id="top" className="hero">
-        <div className="hero-media"><img src="./hero-poster.jpg" alt="Local property landscape around Laksar" /></div>
+        <div className="hero-media" ref={heroMediaRef}><img src="./hero-poster.jpg" alt="Local property landscape around Laksar" /></div>
         <div className="hero-shade" /><div className="hero-grid" /><div className="hero-orb" />
         <div className={`hero-content ${ready ? 'is-ready' : ''}`}>
           <div className="eyebrow"><span /> LAKSAR · HARIDWAR · UTTARAKHAND</div>
-          <h1>Property,<br /><i>with local clarity.</i></h1>
+          <h1><span>Property,</span><br /><i>with local clarity.</i></h1>
           <p>Plots, farmland, homes and commercial spaces around Laksar — selected for real buyers, with practical information and local guidance.</p>
-          <div className="actions"><a className="btn btn-light" href="#properties"><span>Explore properties</span><b>↗</b></a><a className="btn btn-outline" href="#contact"><span>Tell us what you need</span><b>→</b></a></div>
+          <div className="actions">
+            <a className="btn btn-light magnetic" href="#properties"><span>Explore properties</span><b>↗</b></a>
+            <a className="btn btn-outline magnetic" href="#contact"><span>Tell us what you need</span><b>→</b></a>
+          </div>
         </div>
         <div className="hero-bottom"><span>LOCAL PROPERTY GUIDE</span><span className="scroll-cue"><i /> SCROLL TO EXPLORE</span></div>
       </section>
 
       <section id="properties" className="section">
         <div className="section-head reveal"><div><span className="kicker">PROPERTY COLLECTION</span><h2>Find the right place.<br /><i>Start with the right context.</i></h2></div><p>Clear categories, real visuals and a simple path to enquiry. No exaggerated luxury — just attractive, useful local property.</p></div>
-        <div className="tabs reveal" role="tablist" aria-label="Property categories">{tabs.map((tab) => <button key={tab} className={active === tab ? 'active' : ''} onClick={() => setActive(tab)} role="tab" aria-selected={active === tab}>{tab}<span /></button>)}</div>
-        <div className="cards">{visibleProperties.map((item, i) => <a className="property-card reveal" style={{ '--delay': `${i * 80}ms` } as React.CSSProperties} href="#contact" key={item.title}>
+        <div className="tabs reveal" ref={tabRef} role="tablist" aria-label="Property categories">
+          <div className="tab-indicator" aria-hidden="true" />
+          {tabs.map((tab) => <button key={tab} className={active === tab ? 'active' : ''} onClick={(e) => { setActive(tab); moveTabIndicator(e.currentTarget); }} role="tab" aria-selected={active === tab}>{tab}</button>)}
+        </div>
+        <div className="cards">{visibleProperties.map((item, i) => <a className="property-card reveal tilt-card" style={{ '--delay': `${i * 80}ms` } as React.CSSProperties} href="#contact" key={item.title}>
           <div className="card-image"><img src={`./${item.image}`} alt={item.title} /><span>0{i + 1}</span><div className="card-overlay"><b>View category</b><strong>↗</strong></div></div>
           <div className="card-body"><h3>{item.title}</h3><p>{item.text}</p><b className="card-link">Explore <span>↗</span></b></div>
         </a>)}</div>
@@ -63,11 +143,20 @@ export default function Home() {
 
       <section className="showcase">
         <div className="showcase-copy reveal"><span className="kicker">FROM LAND TO HOME</span><h2>See the opportunity,<br /><i>not just the listing.</i></h2><p>A visual snapshot of the kind of property you can explore with Laksar Properties.</p><a href="#contact" className="text-link">Discuss your requirement <span>↗</span></a></div>
-        <div className="showcase-grid reveal"><div className="shot shot-tall"><img src="./prop-plot-nh334.jpg" alt="Plot near NH 334" /><span>01 / PLOTS</span></div><div className="shot"><img src="./prop-house-3bhk.jpg" alt="Residential house" /><span>02 / HOMES</span></div><div className="shot"><img src="./prop-plot-colony.jpg" alt="Residential plot colony" /><span>03 / LOCALITY</span></div></div>
+        <div className="showcase-grid reveal" role="list" aria-label="Property gallery">
+          {gallery.map((item, i) => <button className={`shot ${i === 0 ? 'shot-tall' : ''}`} key={item.src} onClick={() => setLightbox(i)} aria-label={`Open ${item.alt}`} role="listitem"><img src={item.src} alt={item.alt} /><span>{item.label}</span><b>+</b></button>)}
+        </div>
       </section>
 
-      <section id="contact" className="contact reveal"><div className="contact-ring" /><span className="kicker">LET'S FIND THE RIGHT FIT</span><h2>Have a property<br /><i>requirement?</i></h2><p>Tell us what you are looking for and start a direct conversation.</p><a className="btn btn-dark" href="./contact/"><span>Send your requirement</span><b>→</b></a></section>
+      <section id="contact" className="contact reveal"><div className="contact-ring" /><span className="kicker">LET'S FIND THE RIGHT FIT</span><h2>Have a property<br /><i>requirement?</i></h2><p>Tell us what you are looking for and start a direct conversation.</p><a className="btn btn-dark magnetic" href="./contact/"><span>Send your requirement</span><b>→</b></a></section>
       <footer><span>LAKSAR PROPERTIES</span><span>Laksar · Haridwar · Uttarakhand</span></footer>
+
+      {lightbox !== null && <div className="lightbox" role="dialog" aria-modal="true" aria-label="Property image viewer" onMouseDown={(e) => { if (e.target === e.currentTarget) setLightbox(null); }}>
+        <button className="lightbox-close" onClick={() => setLightbox(null)} aria-label="Close image viewer">×</button>
+        <button className="lightbox-prev" onClick={() => setLightbox((i) => i === null ? 0 : (i - 1 + gallery.length) % gallery.length)} aria-label="Previous image">←</button>
+        <figure><img src={gallery[lightbox].src} alt={gallery[lightbox].alt} /><figcaption>{gallery[lightbox].label}</figcaption></figure>
+        <button className="lightbox-next" onClick={() => setLightbox((i) => i === null ? 0 : (i + 1) % gallery.length)} aria-label="Next image">→</button>
+      </div>}
     </main>
   );
 }
