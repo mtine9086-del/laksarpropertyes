@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import RevealCard from '@/components/animate-ui/RevealCard';
-import PropertyDetailModal, { PropertyDetail } from '@/components/animate-ui/PropertyDetailModal';
+import PropertyDetailModal from '@/components/animate-ui/PropertyDetailModal';
+import type { PropertyDetail } from '@/components/animate-ui/PropertyDetailModal';
 
 type Category = 'All' | 'Plots' | 'Land' | 'Homes' | 'Commercial';
 type Property = PropertyDetail & { category: Exclude<Category, 'All'> };
@@ -42,7 +43,11 @@ export default function Home() {
 
   useEffect(() => {
     if (lightbox === null && !selectedProperty) return;
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') { setLightbox(null); setSelectedProperty(null); } if (lightbox !== null && event.key === 'ArrowRight') setLightbox((i) => i === null ? 0 : (i + 1) % gallery.length); if (lightbox !== null && event.key === 'ArrowLeft') setLightbox((i) => i === null ? 0 : (i - 1 + gallery.length) % gallery.length); };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setLightbox(null); setSelectedProperty(null); }
+      if (lightbox !== null && event.key === 'ArrowRight') setLightbox((i) => i === null ? 0 : (i + 1) % gallery.length);
+      if (lightbox !== null && event.key === 'ArrowLeft') setLightbox((i) => i === null ? 0 : (i - 1 + gallery.length) % gallery.length);
+    };
     document.body.style.overflow = 'hidden'; window.addEventListener('keydown', onKey);
     return () => { document.body.style.overflow = ''; window.removeEventListener('keydown', onKey); };
   }, [lightbox, selectedProperty]);
@@ -50,7 +55,6 @@ export default function Home() {
   const visibleProperties = useMemo(() => active === 'All' ? properties : properties.filter((item) => item.category === active), [active]);
   const moveTabIndicator = (element: HTMLButtonElement) => { const wrapper = tabRef.current; const indicator = wrapper?.querySelector<HTMLElement>('.tab-indicator'); if (!wrapper || !indicator) return; indicator.style.width = `${element.offsetWidth}px`; indicator.style.transform = `translateX(${element.offsetLeft}px)`; };
   useEffect(() => { const b = tabRef.current?.querySelector<HTMLButtonElement>('[aria-selected="true"]'); if (b) moveTabIndicator(b); const r = () => { const x = tabRef.current?.querySelector<HTMLButtonElement>('[aria-selected="true"]'); if (x) moveTabIndicator(x); }; window.addEventListener('resize', r); return () => window.removeEventListener('resize', r); }, [active]);
-
   const openProperty = (item: PropertyDetail) => setSelectedProperty(item);
 
   return <main className="site-shell">
