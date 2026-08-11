@@ -1,0 +1,2 @@
+/* Premium motion layer */
+:root{--motion-fast:220ms;--motion-ui:320ms;--motion-reveal:720ms;--motion-smooth:cubic-bezier(.22,.72,.18,1);--motion-soft:cubic-bezier(.16,1,.3,1)}
