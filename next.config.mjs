@@ -1,11 +1,12 @@
-import type { NextConfig } from 'next';
+const basePath = process.env.BASE_PATH || (process.env.NODE_ENV === 'production' ? '/laksarpropertyes' : '');
 
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   output: 'export',
   images: { unoptimized: true },
   trailingSlash: true,
-  basePath: process.env.NODE_ENV === 'production' ? '/laksarpropertyes' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/laksarpropertyes/' : '',
+  basePath,
+  assetPrefix: basePath ? `${basePath}/` : undefined,
 };
 
 export default nextConfig;
