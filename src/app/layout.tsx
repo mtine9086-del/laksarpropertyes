@@ -2,6 +2,7 @@ import './globals.css';
 import './inspira.css';
 import './property-modal.css';
 import './premium-motion.css';
+import './particle-fix.css';
 import type { Metadata } from 'next';
 import MotionEnhancer from '@/components/MotionEnhancer';
 
