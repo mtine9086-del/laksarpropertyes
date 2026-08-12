@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "preview": "node scripts/serve.mjs"
+    "preview": "node serve.mjs"
   },
   "dependencies": {
     "next": "^14.2.5",
